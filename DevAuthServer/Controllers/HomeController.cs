@@ -8,25 +8,29 @@ namespace DevAuthServer.Controllers;
 [Route("[controller]")]
 public class HomeController : Controller
 {
+    private readonly Browser _browser;
     private readonly Database _database;
 
     public HomeController(Database database)
     {
+        _browser = new Browser(Request, Response);
         _database = database;
     }
 
     [HttpGet("login")]
-    public IActionResult GetLogin([FromQuery] GetAuthorizeIOModel input)
+    public IActionResult GetLogin([FromQuery] AuthorizeInputModel input)
     {
-        input.Validate(_database);
+        input.Validate();
         return View(input);
     }
 
     [HttpPost("login")]
-    public IActionResult PostLogin([FromForm] LoginIOModel input)
+    public IActionResult PostLogin([FromForm] LoginInputModel input)
     {
-        var userId = new PostLoginHandler(_database, input).Process();
-        Response.Cookies.Append(Todo.USERID_COOKIE_NAME, userId);
+        // We'll handle our login to our IdP here.
+        _browser.UserId = new LoginHandler(_database, input).Process();
+
+        // Then redirect to our OAuth system for the response to the client.
         return RedirectPreserveMethod("/auth/authorize");
     }
 }

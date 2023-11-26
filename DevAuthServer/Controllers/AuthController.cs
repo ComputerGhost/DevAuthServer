@@ -3,47 +3,50 @@ using DevAuthServer.Handlers.Logout;
 using DevAuthServer.Handlers.Token;
 using DevAuthServer.Storage;
 using Microsoft.AspNetCore.Mvc;
-using System.Web;
 
 namespace DevAuthServer.Controllers;
 
 [Route("auth")]
 public class AuthController : ControllerBase
 {
+    private readonly Browser _browser;
     private readonly Database _database;
 
     public AuthController(Database database)
     {
+        _browser = new Browser(Request, Response);
         _database = database;
     }
 
     [HttpGet("authorize")]
-    public IActionResult Authorize_Get([FromQuery] GetAuthorizeIOModel input)
+    public IActionResult Authorize_Get([FromQuery] AuthorizeInputModel input)
     {
+        input.Validate();
+
+        // MVC controller will present the login form.
         return RedirectToAction("Login", "Home", input);
     }
 
     [HttpPost("authorize")]
-    public IActionResult Authorize_Post([FromForm] GetAuthorizeIOModel input)
+    public IActionResult Authorize_Post([FromForm] AuthorizeInputModel input)
     {
-        var userId = Request.Cookies[Todo.USERID_COOKIE_NAME];
-        if (userId == null)
+        input.Validate();
+
+        if (_browser.UserId == null)
         {
+            // We aren't logged into the IdP.
             return Unauthorized();
         }
 
-        input.Validate(_database);
-
-        var redirectUri = new PostAuthorizeHandler(_database, input, userId).Process();
+        var redirectUri = new AuthorizeHandler(_database, input, _browser.UserId).Process();
         return Redirect(redirectUri.ToString());
     }
 
     [HttpGet("end-session")]
     public IActionResult EndSession_Get([FromQuery] LogoutInputModel input)
     {
-        var userId = Request.Cookies[Todo.USERID_COOKIE_NAME];
-        var redirectUri = new LogoutHandler(_database).Process(input, userId);
-        Response.Cookies.Delete(Todo.USERID_COOKIE_NAME);
+        var redirectUri = new LogoutHandler(_database).Process(input, _browser.UserId);
+        _browser.UserId = null;
 
         if (redirectUri != null)
         {
@@ -66,7 +69,7 @@ public class AuthController : ControllerBase
     public IActionResult Token_Post([FromForm] TokenInputModel input)
     {
         input.Validate();
-        var todo = new PostTokenHandler().Process();
+        var todo = new TokenHandler().Process();
         return Ok();
     }
 

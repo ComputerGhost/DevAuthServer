@@ -1,9 +1,8 @@
 ﻿using DevAuthServer.Constants;
-using DevAuthServer.Storage;
 
 namespace DevAuthServer.Handlers.Authorize;
 
-public class GetAuthorizeIOModel
+public class AuthorizeInputModel
 {
     public string client_id { get; set; } = null!;
     public string? code_challenge { get; set; }
@@ -15,35 +14,44 @@ public class GetAuthorizeIOModel
     public string? scope { get; set; }
     public string? state { get; set; }
 
+    internal bool IsOpenId => Scopes.Contains("openid");
+
+    internal FlowType Flow => response_type switch
+    {
+        "code" => FlowType.AuthorizationCode,
+        "id_token" => FlowType.Implicit,
+        "id_token token" => FlowType.Implicit,
+        "token" => FlowType.Implicit,
+        "code token" => FlowType.Hybrid,
+        "code id_token" => FlowType.Hybrid,
+        "code id_token token" => FlowType.Hybrid,
+        _ => FlowType.Invalid,
+    };
+
     internal IEnumerable<string> Scopes => (scope ?? "").Split(',');
 
-    internal void Validate(Database database)
+    internal void Validate()
     {
-        var isOpenId = Scopes.Contains("openid");
-        var grantType = new GrantType().FromResponseType(response_type);
-
         // Validate client_id
-        var client = database.Clients.GetClient(client_id)
-            ?? throw new Exception("client_id did not match to a client.");
+        if (client_id == null)
+            throw new Exception("client_id is required.");
 
         // Validate code_challenge
         if (code_challenge != null && !new[] { "plain", "S256" }.Contains(code_challenge_method))
             throw new Exception("code_challenge_method is not valid.");
 
         //  Validate nonce
-        if (grantType == GrantType.Implicit && nonce == null)
+        if (Flow == FlowType.Implicit && nonce == null)
             throw new Exception("nonce is required for implicit flow.");
 
         // Validate redirect_uri
-        if (isOpenId && redirect_uri == null)
+        if (IsOpenId && redirect_uri == null)
             throw new Exception("redirect_uri is required for openid.");
-        if (isOpenId && client.RedirectUris.Contains(redirect_uri))
-            throw new Exception("redirect_uri is not valid for the client.");
 
         // Validate response_type
-        if (grantType == GrantType.None)
+        if (Flow == FlowType.Invalid)
             throw new Exception("response_type is not valid.");
-        if (response_type.Contains("id_token") && !isOpenId)
+        if (response_type.Contains("id_token") && !IsOpenId)
             throw new Exception("response_type requires an openid scope.");
     }
 }

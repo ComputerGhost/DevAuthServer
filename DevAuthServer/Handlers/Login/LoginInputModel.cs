@@ -1,10 +1,9 @@
-﻿namespace DevAuthServer.Storage.Entities;
+﻿using DevAuthServer.Handlers.Authorize;
 
-public class UserEntity
+namespace DevAuthServer.Handlers.Login;
+
+public class LoginInputModel : AuthorizeInputModel
 {
-    public string Id { get; set; } = new Guid().ToString();
-    public long LoginTime { get; set; } = new DateTime().Ticks / 1000;
-
     public string DisplayName { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string? PictureUrl { get; set; }

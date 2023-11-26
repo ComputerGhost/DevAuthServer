@@ -1,13 +1,14 @@
 ﻿using DevAuthServer.Storage;
+using DevAuthServer.Storage.Entities;
 
 namespace DevAuthServer.Handlers.Login;
 
-public class PostLoginHandler
+public class LoginHandler
 {
     private Database _database;
-    private LoginIOModel _input;
+    private LoginInputModel _input;
 
-    public PostLoginHandler(Database database, LoginIOModel input)
+    public LoginHandler(Database database, LoginInputModel input)
     {
         _database = database;
         _input = input;
@@ -15,7 +16,8 @@ public class PostLoginHandler
 
     public string Process()
     {
-        var newUser = _database.Users.CreateUser(_input);
+        var newUser = new User(_input);
+        _database.Users.Add(newUser);
         return newUser.Id;
     }
 }

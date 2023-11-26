@@ -1,18 +1,19 @@
 ﻿using DevAuthServer.Constants;
 using DevAuthServer.Handlers.Login;
 using DevAuthServer.Storage;
+using DevAuthServer.Storage.Entities;
 using System;
 using System.Web;
 
 namespace DevAuthServer.Handlers.Authorize;
 
-public class PostAuthorizeHandler
+public class AuthorizeHandler
 {
     private Database _database;
-    private GetAuthorizeIOModel _input;
-    private string? _userId;
+    private AuthorizeInputModel _input;
+    private string _userId;
 
-    public PostAuthorizeHandler(Database database, GetAuthorizeIOModel input, string? userId)
+    public AuthorizeHandler(Database database, AuthorizeInputModel input, string userId)
     {
         _database = database;
         _input = input;
@@ -21,36 +22,42 @@ public class PostAuthorizeHandler
 
     public Uri Process()
     {
-        var grantType = new GrantType().FromResponseType(_input.response_type);
-        return grantType switch
+        return _input.Flow switch
         {
-            GrantType.AuthorizationCode => Process_AuthorizationCode(),
-            GrantType.Hybrid => Process_Hybrid(),
-            GrantType.Implicit => Process_Implicit(),
+            FlowType.AuthorizationCode => Process_AuthorizationCode(),
+            FlowType.Hybrid => Process_Hybrid(),
+            FlowType.Implicit => Process_Implicit(),
             _ => new Uri("/"),
         };
     }
 
     private Uri Process_AuthorizationCode()
     {
-        var uriBuilder = new UriBuilder(_input.redirect_uri!);
+        // Create a code to reference the user and client.
+        var newCode = new AuthorizationCode(_input.client_id, _userId);
+        _database.AuthorizationCodes.Add(newCode);
 
+        // We'll be modifying the redirect_uri to include our response.
+        var uriBuilder = new UriBuilder(_input.redirect_uri!);
         var query = HttpUtility.ParseQueryString(uriBuilder.Query);
-        query["code"] = _database.Codes.CreateCode().Code;
+
+        query["code"] = newCode.code;
         if (_input.state != null)
             query["state"] = _input.state;
         if (Todo.ENABLE_OIDC_SESSION_MANAGEMENT)
             query["session_state"] = Todo.GenerateSessionState(_input.redirect_uri!, _input.client_id);
-        uriBuilder.Query = query.ToString();
 
+        uriBuilder.Query = query.ToString();
         return uriBuilder.Uri;
     }
 
     private Uri Process_Hybrid()
     {
+        // Do both other methods.
         var codeUri = Process_AuthorizationCode();
         var implicitUri = Process_Implicit();
 
+        // Now combine the responses.
         var uriBuilder = new UriBuilder(codeUri);
         uriBuilder.Fragment = implicitUri.Fragment;
         return uriBuilder.Uri;
@@ -58,6 +65,10 @@ public class PostAuthorizeHandler
 
     private Uri Process_Implicit()
     {
+        // Create an access token.
+        var accessToken = new AccessToken(_userId);
+
+        // We'll be modifying the redirect_uri to include our response.
         var uriBuilder = new UriBuilder(_input.redirect_uri!);
         var fragments = HttpUtility.ParseQueryString("");
 
@@ -68,23 +79,20 @@ public class PostAuthorizeHandler
         if (Todo.ENABLE_OIDC_SESSION_MANAGEMENT)
             fragments["session_state"] = Todo.GenerateSessionState(_input.redirect_uri!, _input.client_id);
 
-        // Both OAuth2 and OIDC require creating an access token.
-        var token = _database.Tokens.CreateToken();
-
         // If user requested the token returned, then return it
         if (_input.response_type.Split(' ').Contains("token"))
-            fragments["access_token"] = token.access_token;
+            fragments["access_token"] = accessToken.access_token;
 
         // If we're doing openid, then create an id token too.
-        if (_input.Scopes.Contains("openid"))
+        if (_input.IsOpenId)
         {
-            var client = _database.Clients.GetClient(_input.client_id)!;
-            var user = _database.Users.GetUser(_userId!)!;
-            var id_token = _database.IdTokens.CreateIdToken(_input, client, user, token);
+            var user = _database.Users.First(u => u.Id == _userId);
+            var idToken = new IdToken(_input, user, accessToken);
+            _database.IdTokens.Add(idToken);
 
             // If the user requested the id token returned, then return it.
             if (_input.response_type.Split(' ').Contains("id_token"))
-                fragments["id_token"] = id_token.Encode();
+                fragments["id_token"] = idToken.Encode();
         }
 
         uriBuilder.Fragment = fragments.ToString();

@@ -1,4 +1,5 @@
 ﻿using DevAuthServer.Storage;
+using DevAuthServer.Storage.Entities;
 using System.Web;
 
 namespace DevAuthServer.Handlers.Logout;
@@ -14,22 +15,12 @@ public class LogoutHandler
 
     public Uri? Process(LogoutInputModel input, string? userId)
     {
-        if (userId != null)
-        {
-            DeleteUserData(userId);
-        }
+        _database.AuthorizationCodes.RemoveAll(c => c.UserId == userId);
+        _database.AccessTokens.RemoveAll(t => t.UserId == userId);
+        _database.IdTokens.RemoveAll(t => t.sub == userId);
+        _database.Users.RemoveAll(u => u.Id == userId);
 
         return BuildRedirectUri(input);
-    }
-
-    private void DeleteUserData(string userId)
-    {
-        _database.Users.DeleteUser(userId);
-        var accessTokens = _database.IdTokens.DeleteForUserId(userId);
-        foreach (var code in accessTokens)
-        {
-            _database.Codes.Delete(code);
-        }
     }
 
     private Uri? BuildRedirectUri(LogoutInputModel input)

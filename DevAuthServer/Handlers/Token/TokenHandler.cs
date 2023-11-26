@@ -3,12 +3,12 @@ using DevAuthServer.Storage;
 
 namespace DevAuthServer.Handlers.Token;
 
-public class PostTokenHandler
+public class TokenHandler
 {
     private readonly Database _database;
     private readonly TokenInputModel _input;
 
-    public PostTokenHandler(Database database, TokenInputModel input)
+    public TokenHandler(Database database, TokenInputModel input)
     {
         _database = database;
         _input = input;

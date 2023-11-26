@@ -1,13 +1,11 @@
 ﻿using DevAuthServer.Storage.Entities;
-using DevAuthServer.Storage.Repositories;
 
 namespace DevAuthServer.Storage;
 
 public class Database
 {
-    public readonly ClientRepository Clients = new();
-    public readonly CodeRepository Codes = new();
-    public readonly IdTokenRepository IdTokens = new();
-    public readonly TokenRepository Tokens = new();
-    public readonly UserRepository Users = new();
+    public readonly List<AuthorizationCode> AuthorizationCodes = new();
+    public readonly List<IdToken> IdTokens = new();
+    public readonly List<AccessToken> AccessTokens = new();
+    public readonly List<User> Users = new();
 }

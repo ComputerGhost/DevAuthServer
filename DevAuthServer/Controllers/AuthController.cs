@@ -17,17 +17,22 @@ public class AuthController : ControllerBase
     [HttpGet("authorize")]
     public IActionResult Authorize_Get([FromQuery] GetAuthorizeIOModel input)
     {
-        input.Validate(_database);
         return RedirectToAction("Login", "Home", input);
     }
 
     [HttpPost("authorize")]
-    public IActionResult Authorize_Post(
-        [FromForm] GetAuthorizeIOModel input)
+    public IActionResult Authorize_Post([FromForm] GetAuthorizeIOModel input)
     {
+        var userId = Request.Cookies[Todo.USERID_COOKIE_NAME];
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
         input.Validate(_database);
-        var model = new PostAuthorizeHandler(input, _database);
-        return Ok(model);
+
+        var redirectUri = new PostAuthorizeHandler(_database, input, userId).Process();
+        return Redirect(redirectUri.ToString());
     }
 
     [HttpGet("end-session")]

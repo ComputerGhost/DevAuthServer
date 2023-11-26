@@ -1,4 +1,5 @@
 ﻿using DevAuthServer.Constants;
+using DevAuthServer.Handlers.Login;
 using DevAuthServer.Storage;
 using System;
 using System.Web;
@@ -9,11 +10,13 @@ public class PostAuthorizeHandler
 {
     private Database _database;
     private GetAuthorizeIOModel _input;
+    private string? _userId;
 
-    public PostAuthorizeHandler(GetAuthorizeIOModel input, Database database)
+    public PostAuthorizeHandler(Database database, GetAuthorizeIOModel input, string? userId)
     {
-        _input = input;
         _database = database;
+        _input = input;
+        _userId = userId;
     }
 
     public Uri Process()
@@ -58,25 +61,31 @@ public class PostAuthorizeHandler
         var uriBuilder = new UriBuilder(_input.redirect_uri!);
         var fragments = HttpUtility.ParseQueryString("");
 
-        var token = _database.Tokens.CreateToken();
-
-        if (_input.response_type.Split(' ').Contains("token"))
-            fragments["access_token"] = token.access_token;
-
-        if (_input.Scopes.Contains("openid"))
-        {
-            var client = _database.Clients.GetClient(_input.client_id)!;
-            var id_token = _database.IdTokens.CreateIdToken(_input, client);
-            if (_input.response_type.Split(' ').Contains("id_token"))
-                fragments["id_token"] = id_token.Encode();
-        }
-
         fragments["token_type"] = "bearer";
         fragments["expires_in"] = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS.ToString();
         if (_input.state != null)
             fragments["state"] = _input.state;
         if (Todo.ENABLE_OIDC_SESSION_MANAGEMENT)
             fragments["session_state"] = Todo.GenerateSessionState(_input.redirect_uri!, _input.client_id);
+
+        // Both OAuth2 and OIDC require creating an access token.
+        var token = _database.Tokens.CreateToken();
+
+        // If user requested the token returned, then return it
+        if (_input.response_type.Split(' ').Contains("token"))
+            fragments["access_token"] = token.access_token;
+
+        // If we're doing openid, then create an id token too.
+        if (_input.Scopes.Contains("openid"))
+        {
+            var client = _database.Clients.GetClient(_input.client_id)!;
+            var user = _database.Users.GetUser(_userId!)!;
+            var id_token = _database.IdTokens.CreateIdToken(_input, client, user, token);
+
+            // If the user requested the id token returned, then return it.
+            if (_input.response_type.Split(' ').Contains("id_token"))
+                fragments["id_token"] = id_token.Encode();
+        }
 
         uriBuilder.Fragment = fragments.ToString();
         return uriBuilder.Uri;

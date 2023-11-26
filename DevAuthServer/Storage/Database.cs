@@ -9,4 +9,5 @@ public class Database
     public readonly CodeRepository Codes = new();
     public readonly IdTokenRepository IdTokens = new();
     public readonly TokenRepository Tokens = new();
+    public readonly UserRepository Users = new();
 }

@@ -1,10 +1,10 @@
-using DevAuthServer.Endpoints;
+using DevAuthServer.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddRazorPages();
+builder.Services.AddMvc();
+builder.Services.AddSingleton<Database>();
 
 var app = builder.Build();
-app.MapRazorPages();
-app.MapEndpoints();
+app.MapControllers();
 
 await app.RunAsync();

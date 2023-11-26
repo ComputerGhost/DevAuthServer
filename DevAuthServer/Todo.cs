@@ -10,6 +10,11 @@ public static class Todo
 {
     public static int OIDC_TOKEN_EXPIRES_IN_SECONDS { get; set; } = 60 * 60;
 
+    public static string ISSUER = "localhost";
+    public static string USER_ID = "userid";
+
+    public static string USERID_COOKIE_NAME = "user-id";
+
     // See <https://openid.net/specs/openid-connect-session-1_0.html>.
     #region OIDC_SESSION_MANAGEMENT
 

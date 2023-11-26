@@ -1,3 +1,23 @@
 ﻿@model DevAuthServer.Handlers.Authorize.GetAuthorizeIOModel;
 
-tbd
+<form method="post">
+
+    <div class="form-field">
+        <label>Email:</label>
+        <input type="email" />
+    </div>
+
+    <div class="form-field">
+        <label></label>
+    </div>
+
+    <input type="hidden" name="client_id" value="@Model.client_id">
+    <input type="hidden" name="code_challenge" value="@Model.code_challenge">
+    <input type="hidden" name="code_challenge_method" value="@Model.code_challenge_method">
+    <input type="hidden" name="nonce" value="@Model.nonce">
+    <input type="hidden" name="prompt" value="@Model.prompt">
+    <input type="hidden" name="redirect_uri" value="@Model.redirect_uri">
+    <input type="hidden" name="response_type" value="@Model.response_type">
+    <input type="hidden" name="scope" value="@Model.scope">
+    <input type="hidden" name="state" value="@Model.state">
+</form>

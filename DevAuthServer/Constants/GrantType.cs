@@ -8,10 +8,30 @@ public enum GrantType
     AuthorizationCode,
     Implicit,
     Hybrid,
+
+    // Some additional used for token endpoint
+    // AuthorizationCode,
+    RefreshToken,
+    Password,
+    ClientCredentials
 }
 
 public static class GrantTypeExtensions
 {
+    public static GrantType FromString(this GrantType grantType, string value)
+    {
+        return value switch
+        {
+            "authorization_code" => GrantType.AuthorizationCode,
+            "implicit" => GrantType.Implicit,
+            "hybrid" => GrantType.Hybrid,
+            "refresh_token" => GrantType.RefreshToken,
+            "password" => GrantType.Password,
+            "client_credentials" => GrantType.ClientCredentials,
+            _ => GrantType.None,
+        };
+    }
+
     public static GrantType FromResponseType(this GrantType grantType, string responseType)
     {
         return responseType switch

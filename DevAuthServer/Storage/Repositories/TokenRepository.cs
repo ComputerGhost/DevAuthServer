@@ -9,7 +9,7 @@ public class TokenRepository
 
     public TokenEntity CreateToken()
     {
-        var entity = new TokenEntity(Guid.NewGuid().ToString());
+        var entity = new TokenEntity(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         _byAccessToken.Add(entity.access_token, entity);
         return entity;
     }

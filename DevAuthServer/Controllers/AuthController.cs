@@ -54,15 +54,10 @@ public class AuthController : ControllerBase
         }
     }
 
-    [HttpGet("introspect")]
-    public IActionResult Introspect_Get()
-    {
-        return Ok();
-    }
-
     [HttpPost("introspect")]
     public IActionResult Introspect_Post()
     {
+        Todo.ProcessIntrospection();
         return Ok();
     }
 

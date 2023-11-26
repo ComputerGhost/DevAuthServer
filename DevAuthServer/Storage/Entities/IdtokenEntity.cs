@@ -19,7 +19,6 @@ public class IdtokenEntity
     public const bool email_verified = true;
     public string? picture { get; set; }
     public string? preferred_username { get; set; }
-
     public IEnumerable<string>? roles { get; set; }
 
     public string Encode()

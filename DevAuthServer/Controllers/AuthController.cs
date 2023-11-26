@@ -1,6 +1,8 @@
 ﻿using DevAuthServer.Handlers.Authorize;
+using DevAuthServer.Handlers.Logout;
 using DevAuthServer.Storage;
 using Microsoft.AspNetCore.Mvc;
+using System.Web;
 
 namespace DevAuthServer.Controllers;
 
@@ -36,9 +38,20 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("end-session")]
-    public IActionResult EndSession_Get()
+    public IActionResult EndSession_Get(LogoutInputModel input)
     {
-        return Ok();
+        var userId = Request.Cookies[Todo.USERID_COOKIE_NAME];
+        var redirectUri = new LogoutHandler(_database).Process(input, userId);
+        Response.Cookies.Delete(Todo.USERID_COOKIE_NAME);
+
+        if (redirectUri != null)
+        {
+            return Redirect(redirectUri.ToString());
+        }
+        else
+        {
+            return Ok();
+        }
     }
 
     [HttpGet("introspect")]

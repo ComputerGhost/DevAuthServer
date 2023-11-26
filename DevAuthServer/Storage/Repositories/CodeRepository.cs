@@ -13,6 +13,11 @@ public class CodeRepository
         return entity;
     }
 
+    public void Delete(string code)
+    {
+        _byCode.Remove(code);
+    }
+
     public CodeEntity? GetCode(string code)
     {
         return _byCode.TryGetValue(code, out CodeEntity? codeEntity) ? codeEntity : null;

@@ -18,7 +18,7 @@ public class IdTokenRepository
         var token = new IdtokenEntity
         {
             iss = Todo.ISSUER,
-            sub = Todo.USER_ID,
+            sub = user.Id,
             aud = client.ClientId,
             exp = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS,
             iat = new DateTime().Ticks / 1000, // Time of token creation
@@ -31,6 +31,20 @@ public class IdTokenRepository
         };
         _byAccessToken.Add(accessToken.access_token, token);
         return token;
+    }
+
+    /// <summary>
+    /// Removes all id tokens associated with a user.
+    /// </summary>
+    /// <returns>All access tokens associated with deleted id tokens.</returns>
+    public IEnumerable<string> DeleteForUserId(string userId)
+    {
+        var accessTokens = _byAccessToken.Where(kvp => kvp.Value.sub == userId).Select(kvp => kvp.Key);
+        foreach (var accessToken in accessTokens)
+        {
+            _byAccessToken.Remove(accessToken);
+        }
+        return accessTokens;
     }
 
     public IdtokenEntity? GetIdToken(string access_token)

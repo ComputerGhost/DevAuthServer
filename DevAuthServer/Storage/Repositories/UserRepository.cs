@@ -20,6 +20,11 @@ public class UserRepository
         return entity;
     }
 
+    public void DeleteUser(string userId)
+    {
+        _byId.Remove(userId);
+    }
+
     public UserEntity? GetUser(string userId)
     {
         return _byId.TryGetValue(userId, out UserEntity? entity) ? entity : null;

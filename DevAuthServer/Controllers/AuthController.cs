@@ -61,33 +61,31 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("jwks")]
-    public IActionResult Jwks_Get()
-    {
-        return Ok();
-    }
-
     [HttpPost("token")]
     public IActionResult Token_Post()
     {
+        todo
         return Ok();
     }
 
     [HttpGet("userinfo")]
     public IActionResult UserInfo_Get()
     {
+        Todo.ProcessUserInfo();
         return Ok();
     }
 
     [HttpOptions("userinfo")]
     public IActionResult UserInfo_Options()
     {
+        Todo.ProcessUserInfo();
         return Ok();
     }
 
     [HttpPost("userinfo")]
     public IActionResult UserInfo_Post()
     {
+        Todo.ProcessUserInfo();
         return Ok();
     }
 }

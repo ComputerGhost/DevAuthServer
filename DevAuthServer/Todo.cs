@@ -16,6 +16,7 @@ public static class Todo
     public static string USERID_COOKIE_NAME = "user-id";
 
     public static void ProcessIntrospection() => throw new NotImplementedException();
+    public static void ProcessUserInfo() => throw new NotImplementedException();
 
     // See <https://openid.net/specs/openid-connect-session-1_0.html>.
     #region OIDC_SESSION_MANAGEMENT

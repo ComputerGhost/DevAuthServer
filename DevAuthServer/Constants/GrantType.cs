@@ -17,12 +17,12 @@ public static class GrantTypeExtensions
         return responseType switch
         {
             "code" => GrantType.AuthorizationCode,
-            "id_token" => GrantType.Implicit, //
-            "id_token token" => GrantType.Implicit, //
+            "id_token" => GrantType.Implicit,
+            "id_token token" => GrantType.Implicit,
             "token" => GrantType.Implicit,
-            "code token" => GrantType.Hybrid, // not openid in our code
-            "code id_token" => GrantType.Hybrid, //
-            "code id_token token" => GrantType.Hybrid, //
+            "code token" => GrantType.Hybrid,
+            "code id_token" => GrantType.Hybrid,
+            "code id_token token" => GrantType.Hybrid,
             _ => GrantType.None,
         };
     }

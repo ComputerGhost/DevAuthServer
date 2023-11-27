@@ -1,4 +1,5 @@
 ﻿using DevAuthServer.Handlers.Authorize;
+using DevAuthServer.Handlers.Introspect;
 using DevAuthServer.Handlers.Logout;
 using DevAuthServer.Handlers.Token;
 using DevAuthServer.Handlers.UserInfo;
@@ -60,10 +61,18 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("introspect")]
-    public IActionResult Introspect_Post()
+    public IActionResult Introspect_Post(IntrospectInputModel input)
     {
-        // todo
-        return Ok();
+        // Client creds may be set in header instead of body.
+        var basicAuth = new Browser(Request, Response).BasicAuth;
+        if (basicAuth != null)
+        {
+            input.client_id = basicAuth.Value.Item1;
+            input.client_secret = basicAuth.Value.Item2;
+        }
+
+        var response = new IntrospectHandler(_database, input).Process();
+        return Ok(response);
     }
 
     [HttpPost("token")]

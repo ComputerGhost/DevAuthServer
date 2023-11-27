@@ -14,7 +14,7 @@ public class DiscoveryHandler
             authorization_endpoint = $"{baseUrl}/authorize",
             token_endpoint = $"{baseUrl}/token",
             userinfo_endpoint = $"{baseUrl}/userinfo",
-            jwks_uri = "specs say this is required but I don't have it.",
+            jwks_uri = "${baseUrl}/jwks",
             response_types_supported = new[] { "code", "id_token", "id_token token", "token", "code token", "code id_token", "code id_token token" },
             grant_types_supported = new[] { "authorization_code", "client_credentials", "implicit", "password", "refresh_token" },
             subject_types_supported = new[] { "public" },

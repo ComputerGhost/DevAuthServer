@@ -45,7 +45,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("end-session")]
-    public IActionResult EndSession_Get([FromQuery] LogoutInputModel input)
+    public IActionResult EndSession([FromQuery] LogoutInputModel input)
     {
         var redirectUri = new LogoutHandler(_database).Process(input, _browser.UserIdCookie);
         _browser.UserIdCookie = null;
@@ -61,7 +61,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("introspect")]
-    public IActionResult Introspect_Post([FromForm] IntrospectInputModel input)
+    public IActionResult Introspect([FromForm] IntrospectInputModel input)
     {
         // Client creds may be set in header instead of body.
         var basicAuth = new Browser(Request, Response).BasicAuth;
@@ -75,8 +75,17 @@ public class AuthController : ControllerBase
         return Ok(response);
     }
 
+    [HttpPost("jwks")]
+    public IActionResult Jwks()
+    {
+        // Yea I'm just not going to do this.
+        // I'm only supporting HS256. The spec says I have to support RS256 too.
+        // Maybe later.
+        throw new NotImplementedException();
+    }
+
     [HttpPost("token")]
-    public IActionResult Token_Post([FromForm] TokenInputModel input)
+    public IActionResult Token([FromForm] TokenInputModel input)
     {
         // Client creds may be set in header instead of body.
         var basicAuth = _browser.BasicAuth;

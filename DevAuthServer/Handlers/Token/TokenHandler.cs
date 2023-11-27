@@ -1,5 +1,6 @@
 ﻿using DevAuthServer.Constants;
 using DevAuthServer.Storage;
+using DevAuthServer.Storage.Entities;
 
 namespace DevAuthServer.Handlers.Token;
 
@@ -24,30 +25,95 @@ public class TokenHandler
             GrantType.Password => Process_Password(),
             GrantType.ClientCredentials => Process_ClientCredentials(),
             _ => throw new Exception("grant_type value is not valid for token endpoint.")
-        }; ;
+        };
     }
 
-    public TokenOutputModel Process_AuthorizationCode()
+    private TokenOutputModel Process_AuthorizationCode()
     {
-        Todo.DoSomething();
-        return new TokenOutputModel();
+        var response = new TokenOutputModel();
+
+        var code = _database.AuthorizationCodes.First(c => c.code == _input.code);
+
+        // We'll always want to make an access token.
+        var accessToken = new AccessToken(code);
+        _database.AccessTokens.Add(accessToken);
+        response.access_token = accessToken.access_token;
+        response.refresh_token = accessToken.refresh_token;
+
+        // For OpenId, we also make an id token.
+        if (code.IsOpenId)
+        {
+            var user = _database.Users.Single(u => u.Id == code.UserId);
+            var idToken = new IdToken(_input, user, code);
+            _database.IdTokens.Add(idToken);
+            response.id_token = idToken.Encode();
+        }
+
+        // We no longer need the authorization code.
+        _database.AuthorizationCodes.RemoveAll(c => c.code == _input.code);
+
+        return response;
     }
 
-    public TokenOutputModel Process_RefreshToken()
+    private TokenOutputModel Process_RefreshToken()
     {
-        Todo.DoSomething();
-        return new TokenOutputModel();
+        var response = new TokenOutputModel();
+
+        var oldToken = _database.AccessTokens.First(t => t.refresh_token == _input.refresh_token);
+
+        // We'll always want to make an access token.
+        var accessToken = new AccessToken(oldToken);
+        _database.AccessTokens.Add(accessToken);
+        response.access_token = accessToken.access_token;
+        response.refresh_token = accessToken.refresh_token;
+
+        // For OpenId, we also make an id token.
+        if (oldToken.IsOpenId)
+        {
+            var user = _database.Users.Single(u => u.Id == oldToken.UserId);
+            var idToken = new IdToken(_input, user);
+            _database.IdTokens.Add(idToken);
+            response.id_token = idToken.Encode();
+        }
+
+        // Delete the old access token now.
+        _database.AccessTokens.Remove(oldToken);
+
+        return response;
     }
 
-    public TokenOutputModel Process_Password()
+    private TokenOutputModel Process_Password()
     {
-        Todo.DoSomething();
-        return new TokenOutputModel();
+        var response = new TokenOutputModel();
+
+        var user = _database.Users.Single(u => u.Email == _input.username);
+
+        // We want to make an access token.
+        var accessToken = new AccessToken(user.Id, true);
+        _database.AccessTokens.Add(accessToken);
+        response.access_token = accessToken.access_token;
+        response.refresh_token = accessToken.refresh_token;
+
+        // For OpenId, we also make an id token.
+        var idToken = new IdToken(_input, user);
+        _database.IdTokens.Add(idToken);
+        response.id_token = idToken.Encode();
+        response.scope = _input.scope;
+
+        return response;
     }
 
-    public TokenOutputModel Process_ClientCredentials()
+    private TokenOutputModel Process_ClientCredentials()
     {
-        Todo.DoSomething();
-        return new TokenOutputModel();
+        var response = new TokenOutputModel();
+
+        // Just create an access token here.
+        var accessToken = new AccessToken(null, false);
+        _database.AccessTokens.Add(accessToken);
+        response.access_token = accessToken.access_token;
+        response.refresh_token = accessToken.refresh_token;
+        response.scope = _input.scope;
+
+        return response;
     }
 }

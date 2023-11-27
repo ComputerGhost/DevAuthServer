@@ -34,7 +34,7 @@ public class AuthorizeHandler
     private Uri Process_AuthorizationCode()
     {
         // Create a code to reference the user and client.
-        var newCode = new AuthorizationCode(_input.client_id, _userId);
+        var newCode = new AuthorizationCode(_input, _userId);
         _database.AuthorizationCodes.Add(newCode);
 
         // We'll be modifying the redirect_uri to include our response.
@@ -87,7 +87,7 @@ public class AuthorizeHandler
         if (_input.IsOpenId)
         {
             var user = _database.Users.First(u => u.Id == _userId);
-            var idToken = new IdToken(_input, user, accessToken);
+            var idToken = new IdToken(_input, user);
             _database.IdTokens.Add(idToken);
 
             // If the user requested the id token returned, then return it.

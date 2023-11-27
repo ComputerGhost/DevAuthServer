@@ -1,26 +1,41 @@
 ﻿using DevAuthServer.Handlers.Authorize;
+using DevAuthServer.Handlers.Token;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace DevAuthServer.Storage.Entities;
 
 public class IdToken
 {
-    public IdToken(AuthorizeInputModel input, User user, AccessToken token)
+    public IdToken(AuthorizeInputModel input, User user)
+        : this(user, input.client_id, input.nonce)
+    { }
+
+    public IdToken(TokenInputModel input, User user, AuthorizationCode code)
+        : this(user, input.client_id, code.Nonce)
+    { }
+
+    public IdToken(TokenInputModel input, User user)
+        : this(user, input.client_id, null)
+    { }
+
+    private IdToken(User user, string clientId, string? nonce)
     {
+        // Core claims
         iss = Todo.ISSUER;
         sub = user.Id;
-        aud = input.client_id;
+        aud = clientId;
         exp = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS;
         iat = new DateTime().Ticks / 1000; // Time of token creation
         auth_time = user.LoginTime;
-        nonce = input.nonce;
+        this.nonce = nonce;
+
+        // Additional claims... return everything regardless of scope.
         email = user.Email;
         picture = user.PictureUrl;
         preferred_username = user.DisplayName;
-        roles = user.Roles?.Split(',');
+        roles = user.Roles?.Split(' ');
     }
 
     // OIDC Core claims from <https://openid.net/specs/openid-connect-core-1_0.html>

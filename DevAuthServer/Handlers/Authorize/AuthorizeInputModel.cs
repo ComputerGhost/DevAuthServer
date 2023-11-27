@@ -28,7 +28,7 @@ public class AuthorizeInputModel
         _ => FlowType.Invalid,
     };
 
-    internal IEnumerable<string> Scopes => (scope ?? "").Split(',');
+    internal IEnumerable<string> Scopes => (scope ?? "").Split(' ');
 
     internal void Validate()
     {

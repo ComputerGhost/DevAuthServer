@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using DevAuthServer.Handlers.Authorize;
+using System.Text;
 
 namespace DevAuthServer.Storage.Entities;
 
@@ -8,15 +9,19 @@ namespace DevAuthServer.Storage.Entities;
 /// </summary>
 public class AuthorizationCode
 {
-    public AuthorizationCode(string clientId, string userId)
+    public AuthorizationCode(AuthorizeInputModel input, string userId)
     {
         code = Convert.ToBase64String(new Guid().ToByteArray());
-        ClientId = clientId;
+        ClientId = input.client_id;
         UserId = userId;
+        IsOpenId = input.IsOpenId;
+        Nonce = input.nonce;
     }
 
     internal string ClientId { get; set; } = null!;
     internal string UserId { get; set; } = null!;
+    internal bool IsOpenId { get; set; }
+    internal string? Nonce { get; set; }
 
     public string code { get; set; } = null!;
 }

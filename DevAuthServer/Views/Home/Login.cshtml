@@ -3,12 +3,24 @@
 <form method="post">
 
     <div class="form-field">
-        <label>Email:</label>
-        <input type="email" />
+        <label for="email">Email:</label>
+        <input id="email" name="email" type="email">
     </div>
 
     <div class="form-field">
-        <label></label>
+        <label for="displayName">Display name:</label>
+        <input id="displayName" name="displayName" type="text">
+    </div>
+
+    <div class="form-field">
+        <label for="pictureUrl">Picture url:</label>
+        <input id="pictureUrl" name="pictureUrl" type="url">
+    </div>
+
+    <div class="form-field">
+        <label for="roles">Roles:</label>
+        <input id="roles" name="roles" type="text">
+        <span class="hint">space-delimited</span>
     </div>
 
     <input type="hidden" name="client_id" value="@Model.client_id">

@@ -32,21 +32,21 @@ public class AuthController : ControllerBase
     {
         input.Validate();
 
-        if (_browser.UserId == null)
+        if (_browser.UserIdCookie == null)
         {
             // We aren't logged into the IdP.
             return Unauthorized();
         }
 
-        var redirectUri = new AuthorizeHandler(_database, input, _browser.UserId).Process();
+        var redirectUri = new AuthorizeHandler(_database, input, _browser.UserIdCookie).Process();
         return Redirect(redirectUri.ToString());
     }
 
     [HttpGet("end-session")]
     public IActionResult EndSession_Get([FromQuery] LogoutInputModel input)
     {
-        var redirectUri = new LogoutHandler(_database).Process(input, _browser.UserId);
-        _browser.UserId = null;
+        var redirectUri = new LogoutHandler(_database).Process(input, _browser.UserIdCookie);
+        _browser.UserIdCookie = null;
 
         if (redirectUri != null)
         {
@@ -68,9 +68,17 @@ public class AuthController : ControllerBase
     [HttpPost("token")]
     public IActionResult Token_Post([FromForm] TokenInputModel input)
     {
-        input.Validate();
-        var todo = new TokenHandler().Process();
-        return Ok();
+        // Client creds may be set in header instead of body.
+        var basicAuth = new Browser(Request, Response).BasicAuth;
+        if (basicAuth != null)
+        {
+            input.client_id = basicAuth.Value.Item1;
+            input.client_secret = basicAuth.Value.Item2;
+        }
+
+        input.Validate(_database);
+        var response = new TokenHandler(_database, input).Process();
+        return Ok(response);
     }
 
     [HttpGet("userinfo")]

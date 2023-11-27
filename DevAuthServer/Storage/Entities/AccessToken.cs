@@ -1,20 +1,28 @@
-﻿namespace DevAuthServer.Storage.Entities;
+﻿using DevAuthServer.Handlers.Authorize;
+
+namespace DevAuthServer.Storage.Entities;
 
 public class AccessToken
 {
-    public AccessToken(string userId)
+    public AccessToken(AuthorizationCode code)
+        : this(code.UserId, code.IsOpenId)
+    { }
+
+    public AccessToken(AccessToken oldToken)
+        : this(oldToken.UserId, oldToken.IsOpenId)
+    { }
+
+    public AccessToken(string? userId, bool isOpenId)
     {
         UserId = userId;
+        IsOpenId = isOpenId;
         access_token = Todo.Base64UrlEncode(new Guid().ToString());
         refresh_token = Todo.Base64UrlEncode(new Guid().ToString());
     }
 
-    internal string UserId { get; set; }
+    internal string? UserId { get; set; } // Null when Client Credentials grant is used.
+    internal bool IsOpenId { get; set; }
 
     public string access_token { get; set; } = null!;
-
-    /// <summary>
-    /// Can be used to get a new access token.
-    /// </summary>
     public string refresh_token { get; set; } = null!;
 }

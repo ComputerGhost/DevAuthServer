@@ -25,6 +25,13 @@ public static class Todo
         Convert.ToBase64String(value)
         .TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
+    public static string Base64UrlDecode(string value) =>
+        Encoding.UTF8.GetString(
+            Convert.FromBase64String(
+                value.Replace('-', '+').Replace('_', '/')
+            )
+        );
+
     // See <https://openid.net/specs/openid-connect-session-1_0.html>.
     #region OIDC_SESSION_MANAGEMENT
 

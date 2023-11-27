@@ -5,7 +5,7 @@ public class TokenOutputModel
     // These are always returned.
     public string access_token { get; set; } = null!;
     public string refresh_token { get; set; } = null!;
-    public const string token_type = "Bearer";
+    public string token_type { get; set; } = "Bearer";
     public int expires_in { get; set; } = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS;
 
     // This is only set if using OpenID.

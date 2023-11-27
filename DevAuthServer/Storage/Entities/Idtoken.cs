@@ -49,7 +49,7 @@ public class IdToken
 
     // Common additional claims from <https://www.iana.org/assignments/jwt/jwt.xhtml>.
     public string email { get; set; } = null!;
-    public const bool email_verified = true;
+    public bool email_verified { get; set; } = true;
     public string? picture { get; set; }
     public string? preferred_username { get; set; }
     public IEnumerable<string>? roles { get; set; }

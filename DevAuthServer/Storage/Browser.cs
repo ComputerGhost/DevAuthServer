@@ -46,7 +46,7 @@ public class Browser
         }
     }
 
-    public string? BearerToken
+    public string? BearerAuth
     {
         get
         {

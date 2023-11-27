@@ -66,7 +66,7 @@ public class AuthorizeHandler
     private Uri Process_Implicit()
     {
         // Create an access token.
-        var accessToken = new AccessToken(_userId);
+        var accessToken = new AccessToken(_userId, _input.IsOpenId);
 
         // We'll be modifying the redirect_uri to include our response.
         var uriBuilder = new UriBuilder(_input.redirect_uri!);

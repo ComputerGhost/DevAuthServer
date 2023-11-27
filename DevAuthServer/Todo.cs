@@ -16,7 +16,6 @@ public static class Todo
     public static string USER_ID = "userid";
 
     public static void ProcessIntrospection() => throw new NotImplementedException();
-    public static void ProcessUserInfo() => throw new NotImplementedException();
 
     public static void DoSomething() { }
 

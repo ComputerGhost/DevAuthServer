@@ -1,6 +1,7 @@
 ﻿using DevAuthServer.Handlers.Authorize;
 using DevAuthServer.Handlers.Logout;
 using DevAuthServer.Handlers.Token;
+using DevAuthServer.Handlers.UserInfo;
 using DevAuthServer.Storage;
 using Microsoft.AspNetCore.Mvc;
 
@@ -82,23 +83,19 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("userinfo")]
-    public IActionResult UserInfo_Get()
-    {
-        Todo.ProcessUserInfo();
-        return Ok();
-    }
-
-    [HttpOptions("userinfo")]
-    public IActionResult UserInfo_Options()
-    {
-        Todo.ProcessUserInfo();
-        return Ok();
-    }
-
     [HttpPost("userinfo")]
-    public IActionResult UserInfo_Post()
+    public IActionResult UserInfo(
+        [FromForm] UserInfoInputModel input,
+        [FromQuery] string access_token)
     {
-        Todo.ProcessUserInfo();
-        return Ok();
+        // Creds can be set in many places (per rfc 6750)
+        input.fromQuery = access_token;
+        input.fromHeader = new Browser(Request, Response).BearerAuth;
+        input.Normalize();
+
+        input.Validate(_database);
+
+        var response = new UserInfoHandler(_database, input).Process();
+        return Ok(response);
     }
 }

@@ -61,7 +61,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("introspect")]
-    public IActionResult Introspect_Post(IntrospectInputModel input)
+    public IActionResult Introspect_Post([FromForm] IntrospectInputModel input)
     {
         // Client creds may be set in header instead of body.
         var basicAuth = new Browser(Request, Response).BasicAuth;
@@ -79,7 +79,7 @@ public class AuthController : ControllerBase
     public IActionResult Token_Post([FromForm] TokenInputModel input)
     {
         // Client creds may be set in header instead of body.
-        var basicAuth = new Browser(Request, Response).BasicAuth;
+        var basicAuth = _browser.BasicAuth;
         if (basicAuth != null)
         {
             input.client_id = basicAuth.Value.Item1;
@@ -99,7 +99,7 @@ public class AuthController : ControllerBase
     {
         // Creds can be set in many places (per rfc 6750)
         input.fromQuery = access_token;
-        input.fromHeader = new Browser(Request, Response).BearerAuth;
+        input.fromHeader = _browser.BearerAuth;
         input.Normalize();
 
         input.Validate(_database);

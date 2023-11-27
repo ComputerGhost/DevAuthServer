@@ -21,9 +21,9 @@ public class TokenHandler
         return grantType switch
         {
             GrantType.AuthorizationCode => Process_AuthorizationCode(),
-            GrantType.RefreshToken => Process_RefreshToken(),
-            GrantType.Password => Process_Password(),
             GrantType.ClientCredentials => Process_ClientCredentials(),
+            GrantType.Password => Process_Password(),
+            GrantType.RefreshToken => Process_RefreshToken(),
             _ => throw new Exception("grant_type value is not valid for token endpoint.")
         };
     }
@@ -55,29 +55,16 @@ public class TokenHandler
         return response;
     }
 
-    private TokenOutputModel Process_RefreshToken()
+    private TokenOutputModel Process_ClientCredentials()
     {
         var response = new TokenOutputModel();
 
-        var oldToken = _database.AccessTokens.First(t => t.refresh_token == _input.refresh_token);
-
-        // We'll always want to make an access token.
-        var accessToken = new AccessToken(oldToken);
+        // Just create an access token here.
+        var accessToken = new AccessToken(null, false);
         _database.AccessTokens.Add(accessToken);
         response.access_token = accessToken.access_token;
         response.refresh_token = accessToken.refresh_token;
-
-        // For OpenId, we also make an id token.
-        if (oldToken.IsOpenId)
-        {
-            var user = _database.Users.Single(u => u.Id == oldToken.UserId);
-            var idToken = new IdToken(_input, user);
-            _database.IdTokens.Add(idToken);
-            response.id_token = idToken.Encode();
-        }
-
-        // Delete the old access token now.
-        _database.AccessTokens.Remove(oldToken);
+        response.scope = _input.scope;
 
         return response;
     }
@@ -103,16 +90,29 @@ public class TokenHandler
         return response;
     }
 
-    private TokenOutputModel Process_ClientCredentials()
+    private TokenOutputModel Process_RefreshToken()
     {
         var response = new TokenOutputModel();
 
-        // Just create an access token here.
-        var accessToken = new AccessToken(null, false);
+        var oldToken = _database.AccessTokens.First(t => t.refresh_token == _input.refresh_token);
+
+        // We'll always want to make an access token.
+        var accessToken = new AccessToken(oldToken);
         _database.AccessTokens.Add(accessToken);
         response.access_token = accessToken.access_token;
         response.refresh_token = accessToken.refresh_token;
-        response.scope = _input.scope;
+
+        // For OpenId, we also make an id token.
+        if (oldToken.IsOpenId)
+        {
+            var user = _database.Users.Single(u => u.Id == oldToken.UserId);
+            var idToken = new IdToken(_input, user);
+            _database.IdTokens.Add(idToken);
+            response.id_token = idToken.Encode();
+        }
+
+        // Delete the old access token now.
+        _database.AccessTokens.Remove(oldToken);
 
         return response;
     }

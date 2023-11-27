@@ -31,14 +31,17 @@ public class TokenInputModel
             case GrantType.AuthorizationCode: 
                 Validate_AuthorizationCode(database); 
                 break;
-            case GrantType.RefreshToken: 
-                Validate_RefreshToken(database); 
-                break;
-            case GrantType.Password: 
-                Validate_Password(database); 
-                break;
             case GrantType.ClientCredentials:
                 Validate_ClientCredentials();
+                break;
+            case GrantType.Password:
+                Validate_Password(database);
+                break;
+            case GrantType.Implicit:
+                Validate_Implicit();
+                break;
+            case GrantType.RefreshToken: 
+                Validate_RefreshToken(database); 
                 break;
             default:
                 throw new Exception("grant_type is not valid.");
@@ -53,12 +56,15 @@ public class TokenInputModel
             throw new Exception("code does not exist.");
     }
 
-    public void Validate_RefreshToken(Database database)
+    public void Validate_ClientCredentials()
     {
-        if (refresh_token == null)
-            throw new Exception("refresh_token is required for refresh_token grant.");
-        if (!database.AccessTokens.Any(t => t.refresh_token == refresh_token))
-            throw new Exception("refresh_token does not exist.");
+        if (scope == null)
+            throw new Exception("scope is required for client_credentials grant.");
+    }
+
+    public void Validate_Implicit()
+    {
+        throw new Exception("Implicit grant_type should not use the token endpoint.");
     }
 
     public void Validate_Password(Database database)
@@ -71,9 +77,11 @@ public class TokenInputModel
             throw new Exception("User does not exist.");
     }
 
-    public void Validate_ClientCredentials()
+    public void Validate_RefreshToken(Database database)
     {
-        if (scope == null)
-            throw new Exception("scope is required for client_credentials grant.");
+        if (refresh_token == null)
+            throw new Exception("refresh_token is required for refresh_token grant.");
+        if (!database.AccessTokens.Any(t => t.refresh_token == refresh_token))
+            throw new Exception("refresh_token does not exist.");
     }
 }

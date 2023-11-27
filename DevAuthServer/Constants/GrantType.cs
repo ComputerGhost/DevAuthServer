@@ -6,9 +6,10 @@ public enum GrantType
 {
     None,
     AuthorizationCode,
-    RefreshToken,
+    ClientCredentials,
+    Implicit,
     Password,
-    ClientCredentials
+    RefreshToken,
 }
 
 public static class GrantTypeExtensions
@@ -18,9 +19,10 @@ public static class GrantTypeExtensions
         return value switch
         {
             "authorization_code" => GrantType.AuthorizationCode,
-            "refresh_token" => GrantType.RefreshToken,
-            "password" => GrantType.Password,
             "client_credentials" => GrantType.ClientCredentials,
+            "implicit" => GrantType.Implicit,
+            "password" => GrantType.Password,
+            "refresh_token" => GrantType.RefreshToken,
             _ => GrantType.None,
         };
     }

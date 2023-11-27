@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DevAuthServer.Handlers.Discovery;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DevAuthServer.Controllers;
 
@@ -6,8 +7,9 @@ namespace DevAuthServer.Controllers;
 public class WellKnownController : ControllerBase
 {
     [HttpGet("openid-configuration")]
-    public IActionResult OpenIdConfiguration_Get()
+    public IActionResult OpenIdConfiguration()
     {
-        return Ok();
+        var response = new DiscoveryHandler().Process();
+        return Ok(response);
     }
 }

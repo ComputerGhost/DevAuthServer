@@ -3,6 +3,8 @@ using DevAuthServer.Handlers.Login;
 using DevAuthServer.Storage;
 using DevAuthServer.Storage.Entities;
 using System;
+using System.Security.Cryptography;
+using System.Text;
 using System.Web;
 
 namespace DevAuthServer.Handlers.Authorize;
@@ -44,8 +46,7 @@ public class AuthorizeHandler
         query["code"] = newCode.code;
         if (_input.state != null)
             query["state"] = _input.state;
-        if (Todo.ENABLE_OIDC_SESSION_MANAGEMENT)
-            query["session_state"] = Todo.GenerateSessionState(_input.redirect_uri!, _input.client_id);
+        query["session_state"] = GenerateSessionState();
 
         uriBuilder.Query = query.ToString();
         return uriBuilder.Uri;
@@ -73,11 +74,10 @@ public class AuthorizeHandler
         var fragments = HttpUtility.ParseQueryString("");
 
         fragments["token_type"] = "bearer";
-        fragments["expires_in"] = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS.ToString();
+        fragments["expires_in"] = OIDCConfig.Instance.TokenExpiration.ToString();
         if (_input.state != null)
             fragments["state"] = _input.state;
-        if (Todo.ENABLE_OIDC_SESSION_MANAGEMENT)
-            fragments["session_state"] = Todo.GenerateSessionState(_input.redirect_uri!, _input.client_id);
+        fragments["session_state"] = GenerateSessionState();
 
         // If user requested the token returned, then return it
         if (_input.response_type.Split(' ').Contains("token"))
@@ -97,5 +97,18 @@ public class AuthorizeHandler
 
         uriBuilder.Fragment = fragments.ToString();
         return uriBuilder.Uri;
+    }
+
+    // See <https://openid.net/specs/openid-connect-session-1_0.html>.
+    private string GenerateSessionState()
+    {
+        const string salt = "abc";
+        var clientId = _input.client_id;
+        var origin = new Uri(_input.redirect_uri!).GetLeftPart(UriPartial.Authority);
+        var sessionKey = _userId;
+
+        var unencodedState = $"{clientId} {origin} {sessionKey} {salt}";
+        var encodedState = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(unencodedState)));
+        return $"{encodedState}.{salt}";
     }
 }

@@ -62,7 +62,7 @@ public class AuthController : ControllerBase
     [HttpPost("introspect")]
     public IActionResult Introspect_Post()
     {
-        Todo.ProcessIntrospection();
+        // todo
         return Ok();
     }
 

@@ -1,4 +1,7 @@
-﻿namespace DevAuthServer.Storage;
+﻿using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
+
+namespace DevAuthServer.Storage;
 
 public class Browser
 {
@@ -41,7 +44,8 @@ public class Browser
             }
 
             var credentials = headerValue.Substring("basic ".Length);
-            var parts = Todo.Base64UrlDecode(credentials).Split(':');
+            var decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(credentials));
+            var parts = decoded.Split(':');
             return parts.Length == 1 ? (parts[0], parts[1]) : null;
         }
     }

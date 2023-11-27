@@ -1,5 +1,7 @@
-﻿using DevAuthServer.Handlers.Authorize;
+﻿using DevAuthServer.Constants;
+using DevAuthServer.Handlers.Authorize;
 using DevAuthServer.Handlers.Token;
+using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,10 +25,10 @@ public class IdToken
     private IdToken(User user, string clientId, string? nonce)
     {
         // Core claims
-        iss = Todo.ISSUER;
+        iss = OIDCConfig.Instance.Issuer;
         sub = user.Id;
         aud = clientId;
-        exp = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS;
+        exp = OIDCConfig.Instance.TokenExpiration;
         iat = new DateTime().Ticks / 1000; // Time of token creation
         auth_time = user.LoginTime;
         this.nonce = nonce;
@@ -57,15 +59,15 @@ public class IdToken
     public string Encode()
     {
         var header = "{\"typ\": \"JWT\", \"alg\": \"HS256\"}";
-        var encodedHeader = Todo.Base64UrlEncode(header);
+        var encodedHeader = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(header));
 
         var payload = JsonConvert.SerializeObject(this);
-        var encodedPayload = Todo.Base64UrlEncode(payload);
+        var encodedPayload = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(payload));
 
-        var secret = Encoding.UTF8.GetBytes(Todo.CLIENT_SECRET);
+        var secret = Encoding.UTF8.GetBytes(OIDCConfig.Instance.ClientSecret);
         var source = Encoding.UTF8.GetBytes(encodedPayload);
         var signature = HMACSHA256.HashData(secret, source);
-        var encodedSignature = Todo.Base64UrlEncode(signature);
+        var encodedSignature = WebEncoders.Base64UrlEncode(signature);
 
         return $"{encodedHeader}.{encodedPayload}.{encodedSignature}";
     }

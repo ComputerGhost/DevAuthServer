@@ -1,4 +1,6 @@
-﻿namespace DevAuthServer.Handlers.Token;
+﻿using DevAuthServer.Constants;
+
+namespace DevAuthServer.Handlers.Token;
 
 public class TokenOutputModel
 {
@@ -6,7 +8,7 @@ public class TokenOutputModel
     public string access_token { get; set; } = null!;
     public string refresh_token { get; set; } = null!;
     public string token_type { get; set; } = "Bearer";
-    public int expires_in { get; set; } = Todo.OIDC_TOKEN_EXPIRES_IN_SECONDS;
+    public int expires_in { get; set; } = OIDCConfig.Instance.TokenExpiration;
 
     // This is only set if using OpenID.
     public string? id_token { get; set; }

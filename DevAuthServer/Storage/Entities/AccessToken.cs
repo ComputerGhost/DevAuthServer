@@ -1,4 +1,5 @@
 ﻿using DevAuthServer.Handlers.Authorize;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace DevAuthServer.Storage.Entities;
 
@@ -16,8 +17,8 @@ public class AccessToken
     {
         UserId = userId;
         IsOpenId = isOpenId;
-        access_token = Todo.Base64UrlEncode(new Guid().ToString());
-        refresh_token = Todo.Base64UrlEncode(new Guid().ToString());
+        access_token = WebEncoders.Base64UrlEncode(new Guid().ToByteArray());
+        refresh_token = WebEncoders.Base64UrlEncode(new Guid().ToByteArray());
     }
 
     internal string? UserId { get; set; } // Null when Client Credentials grant is used.

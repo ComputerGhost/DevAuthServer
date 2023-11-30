@@ -1,5 +1,7 @@
 ﻿@model DevAuthServer.Handlers.Authorize.AuthorizeInputModel;
 
+<h1>Login</h1>
+
 <form method="post">
 
     <div class="form-field">
@@ -21,6 +23,10 @@
         <label for="roles">Roles:</label>
         <input id="roles" name="roles" type="text">
         <span class="hint">space-delimited</span>
+    </div>
+
+    <div class="form-field">
+        <input type="submit">
     </div>
 
     <input type="hidden" name="client_id" value="@Model.client_id">

@@ -7,16 +7,32 @@
     <style>
         body {
             padding: 1em;
+            text-align: center;
         }
 
         .form-field {
-            max-width: 280px;
-            margin-bottom: 1em;
+            display: flex;
+            flex-direction: column;
+            max-width: 290px;
+            margin: 0 auto 1em auto;
+            text-align: left;
+        }
+
+        .form-field label {
+            padding-right: 10px;
+            width: 100px;
         }
 
         .hint {
             font-size: 0.8em;
             color: gray;
+            text-align: center;
+        }
+        .hint:before {
+            content: '(';
+        }
+        .hint:after {
+            content: ')';
         }
     </style>
 </head>

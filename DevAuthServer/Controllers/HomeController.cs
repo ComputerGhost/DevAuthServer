@@ -32,7 +32,8 @@ public class HomeController : Controller
     public IActionResult PostLogin([FromForm] LoginInputModel input)
     {
         // We'll handle our login to our IdP here.
-        new Browser(Request, Response).UserIdCookie = new LoginHandler(_database, input).Process();
+        var userId = new LoginHandler(_database, input).Process();
+        Response.Cookies.Append("user-id", userId);
 
         // Then redirect to our OAuth system for the response to the client.
         return RedirectPreserveMethod("/auth/authorize");

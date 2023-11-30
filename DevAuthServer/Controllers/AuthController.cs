@@ -5,7 +5,10 @@ using DevAuthServer.Handlers.Token;
 using DevAuthServer.Handlers.UserInfo;
 using DevAuthServer.Storage;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Newtonsoft.Json;
+using System.Net;
+using System.Text;
 
 namespace DevAuthServer.Controllers;
 
@@ -36,23 +39,23 @@ public class AuthController : ControllerBase
     {
         input.Validate();
 
-        var userIdCookie = new Browser(Request, Response).UserIdCookie;
-        if (userIdCookie == null)
+        var userId = Request.Cookies["user-id"];
+        if (userId == null)
         {
             // We aren't logged into the IdP.
             return Unauthorized();
         }
 
-        var redirectUri = new AuthorizeHandler(_database, input, userIdCookie).Process();
+        var redirectUri = new AuthorizeHandler(_database, input, userId).Process();
         return Redirect(redirectUri.ToString());
     }
 
     [HttpGet("end-session")]
     public IActionResult EndSession([FromQuery] LogoutInputModel input)
     {
-        var userIdCookie = new Browser(Request, Response).UserIdCookie;
+        var userIdCookie = Request.Cookies["user-id"];
         var redirectUri = new LogoutHandler(_database).Process(input, userIdCookie);
-        new Browser(Request, Response).UserIdCookie = null;
+        Response.Cookies.Delete("user-id");
 
         if (redirectUri != null)
         {
@@ -65,10 +68,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("introspect")]
-    public IActionResult Introspect([FromForm] IntrospectInputModel input)
+    public IActionResult Introspect(
+        [FromForm] IntrospectInputModel input,
+        [FromHeader] string? authorization)
     {
         // Client creds may be set in header instead of body.
-        var basicAuth = new Browser(Request, Response).BasicAuth;
+        var basicAuth = ParseBasicAuth(authorization);
         if (basicAuth != null)
         {
             input.client_id = basicAuth.Value.Item1;
@@ -89,10 +94,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("token")]
-    public IActionResult Token([FromForm] TokenInputModel input)
+    public IActionResult Token(
+        [FromForm] TokenInputModel input,
+        [FromHeader] string? authorization)
     {
         // Client creds may be set in header instead of body.
-        var basicAuth = new Browser(Request, Response).BasicAuth;
+        var basicAuth = ParseBasicAuth(authorization);
         if (basicAuth != null)
         {
             input.client_id = basicAuth.Value.Item1;
@@ -108,16 +115,39 @@ public class AuthController : ControllerBase
     [HttpPost("userinfo")]
     public IActionResult UserInfo(
         [FromForm] UserInfoInputModel input,
-        [FromQuery] string access_token)
+        [FromQuery] string access_token,
+        [FromHeader] string authorization)
     {
         // Creds can be set in many places (per rfc 6750)
         input.fromQuery = access_token;
-        input.fromHeader = new Browser(Request, Response).BearerAuth;
+        input.fromHeader = ParseBearerAuth(authorization);
         input.Normalize();
 
         input.Validate(_database);
 
         var response = new UserInfoHandler(_database, input).Process();
         return Ok(response);
+    }
+
+    private static (string, string)? ParseBasicAuth(string? headerValue)
+    {
+        if (headerValue == null || !headerValue.StartsWith("basic ", StringComparison.CurrentCultureIgnoreCase))
+        {
+            return null;
+        }
+
+        var credentials = headerValue.Substring("basic ".Length);
+        var decoded = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(credentials));
+        var parts = decoded.Split(':');
+        return parts.Length == 1 ? (parts[0], parts[1]) : null;
+    }
+
+    private static string? ParseBearerAuth(string? headerValue)
+    {
+        if (headerValue == null || !headerValue.StartsWith("bearer ", StringComparison.CurrentCultureIgnoreCase))
+        {
+            return null;
+        }
+        return headerValue["bearer ".Length..];
     }
 }
